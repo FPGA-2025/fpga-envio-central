@@ -31,7 +31,7 @@ jobs:
           echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
 
       - name: Compactar todos os arquivos .v da raiz
-        run: tar -czf "$FILE_NAME" *.v
+        run: tar -czf "$FILE_NAME" --exclude="*tb*.v" *.v
 
       - name: Instalar sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
