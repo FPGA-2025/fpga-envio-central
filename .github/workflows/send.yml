@@ -1,0 +1,50 @@
+name: FPGA send
+
+on:
+  workflow_call:
+    secrets:
+      PROXY_PASS:
+        required: true
+      TARGET_PASS:
+        required: true
+      HOSTNAME:
+        required: true
+      USERNAME:
+        required: true
+
+jobs:
+  enviar-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do repositório do aluno
+        uses: actions/checkout@v3
+
+      - name: Gerar nome do arquivo automaticamente
+        run: |
+          export TZ=America/Sao_Paulo
+          USER="${{ github.actor }}"
+          REPO="${{ github.repository }}"
+          RUN_ID="${{ github.run_id }}"
+          TIME=$(date +%H%M)
+          FILE_NAME="${RUN_ID}_${USER}_${TIME}_${REPO//\//_}.tar.gz"
+          echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
+
+      - name: Compactar todos os arquivos .v da raiz
+        run: tar -czf "$FILE_NAME" *.v
+
+      - name: Instalar sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Enviar arquivo via scp com proxy SSH
+        env:
+          FILE_NAME: ${{ env.FILE_NAME }}
+          PROXY_PASS: ${{ secrets.PROXY_PASS }}
+          TARGET_PASS: ${{ secrets.TARGET_PASS }}
+          HOSTNAME: ${{ secrets.HOSTNAME }}
+          USERNAME: ${{ secrets.USERNAME }}
+    
+        run: |
+          sshpass -p "$TARGET_PASS" scp -o StrictHostKeyChecking=no \
+            -o ProxyCommand="sshpass -p '$PROXY_PASS' ssh -W %h:%p -q $USERNAME@$HOSTNAME -p 6868 -o StrictHostKeyChecking=no" \
+            "$FILE_NAME" cleiton@cleitin:/eda/worker/fila/entrada/
