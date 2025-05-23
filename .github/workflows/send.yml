@@ -26,7 +26,7 @@ jobs:
           USER="${{ github.actor }}"
           REPO="${{ github.repository }}"
           RUN_ID="${{ github.run_id }}"
-          TIME=$(date +%H%M)
+          TIME=$(date +%H-%M)
           FILE_NAME="${TIME}_${USER}_${RUN_ID}_${REPO//\//_}.tar.gz"
           echo "FILE_NAME=${FILE_NAME}" >> $GITHUB_ENV
 
